@@ -1,0 +1,101 @@
+/*
+ * Copyright (c) 2018.
+ * written by Zen.Liu(http://github.com/ZenLiuCN/), supported by AS IS.
+ */
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+    id "nu.studer.jooq" version "3.0.2"
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'application'
+}
+apply plugin: 'java'
+
+final def jooq_version='3.11.7'
+final def hikaricp_version='3.2.0'
+
+group 'cn.zenliu'
+version '1.0-SNAPSHOT'
+test {
+    useJUnitPlatform()
+}
+tasks.withType(JavaCompile){
+    options.encoding = "UTF-8"
+}
+dependencies {
+    implementation rootProject
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "ch.qos.logback:logback-classic:$logback_version"
+    implementation "io.ktor:ktor-server-netty:$ktor_version"
+    implementation "io.ktor:ktor-server-core:$ktor_version"
+    implementation "io.ktor:ktor-server-host-common:$ktor_version"
+    implementation "io.ktor:ktor-metrics:$ktor_version"
+    implementation "io.ktor:ktor-websockets:$ktor_version"
+    implementation "io.ktor:ktor-jackson:$ktor_version"
+    implementation "joda-time:joda-time:2.10.1"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$kotlinx_coroutines_version"
+    
+    implementation "org.jooq:jooq:$jooq_version"
+    implementation "com.zaxxer:HikariCP:$hikaricp_version"
+//    implementation 'org.codehaus.groovy:groovy-all:2.5.4'
+
+    runtime 'com.h2database:h2:1.4.197'
+    testRuntime 'com.h2database:h2:1.4.197'
+    jooqRuntime 'com.h2database:h2:1.4.197'
+
+    testImplementation "io.ktor:ktor-server-tests:$ktor_version"
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+jooq {
+    version = jooq_version
+    model(sourceSets.main) {
+        jdbc {
+            driver = 'org.h2.Driver'
+            url = 'jdbc:h2:mem:test'
+            user = 'root'
+            password = '123456'
+        }
+        generator {
+            name = 'org.jooq.codegen.JavaGenerator'
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+            database {
+                name = 'org.jooq.meta.h2.H2Database'
+                inputSchema = 'epm'
+
+            }
+            generate {
+                relations = true
+                deprecated = false
+                records = true
+                immutablePojos = true
+                fluentSetters = true
+                serializablePojos = true
+                daos = true
+            }
+            target {
+                packageName = 'cn.zenliu.ktor.boot.example.jooq.model'
+                directory = 'src/main/java' //Location of gen code
+            }
+        }
+    }
+}
+
+compileJava.dependsOn -= 'generateModelJooqSchemaSource'
+
+mainClassName = "cn.zenliu.ktor.boot.example.jooq.ApplicationKt"
+shadowJar {
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+}
