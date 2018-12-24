@@ -17,6 +17,7 @@ import cn.zenliu.ktor.boot.annotations.routing.*
 import cn.zenliu.ktor.boot.context.*
 import io.ktor.application.*
 import io.ktor.features.CallLogging
+import io.ktor.http.content.staticBasePackage
 import io.ktor.routing.Routing
 import io.ktor.util.*
 import org.slf4j.LoggerFactory
@@ -48,7 +49,7 @@ class Ctrl{
     @RawRoute
     fun raw(ctx:Routing){
         ctx{
-
+            staticBasePackage
         }
     }
     @RequestMapping("/info")
